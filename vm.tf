@@ -1,21 +1,21 @@
 resource "azurerm_virtual_network" "example" {
-  name                = "vnet-tf-poc"
+  name                = "${var.vm_name}-vnet"
   address_space       = ["10.0.0.0/16"]
-  location            = "southcentralus"
-  resource_group_name = "1-9978b038-playground-sandbox"
+  location            = var.location
+  resource_group_name = var.resource_group_name
 }
 
 resource "azurerm_subnet" "example" {
-  name                 = "subnet-tf-poc"
-  resource_group_name  = "1-9978b038-playground-sandbox"
+  name                 = "${var.vm_name}-subnet"
+  resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.example.name
   address_prefixes     = ["10.0.1.0/24"]
 }
 
 resource "azurerm_network_interface" "example" {
-  name                = "nic-tf-poc"
-  location            = "southcentralus"
-  resource_group_name = "1-9978b038-playground-sandbox"
+  name                = "${var.vm_name}-nic"
+  location            = var.location
+  resource_group_name = var.resource_group_name
 
   ip_configuration {
     name                          = "internal"
@@ -25,9 +25,9 @@ resource "azurerm_network_interface" "example" {
 }
 
 resource "azurerm_linux_virtual_machine" "example" {
-  name                            = "vm-tf-poc"
-  resource_group_name             = "1-9978b038-playground-sandbox"
-  location                        = "southcentralus"
+  name                            = var.vm_name
+  resource_group_name             = var.resource_group_name
+  location                        = var.location
   size                            = "Standard_B1s"
   admin_username                  = "azureuser"
   admin_password                  = var.admin_password
