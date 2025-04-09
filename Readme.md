@@ -75,13 +75,17 @@ vm_name             = "your-vm-name"
 
     terraform validate
 
-5. Deploy the Infrastructure
+5. Plan the tf code
+
+    terraform plan   
+
+6. Deploy the Infrastructure
 
     terraform apply
 
     Respond with yes when prompted.
 
-6. Destroy the Infrastructure (Optional)
+7. Destroy the Infrastructure (Optional)
 
     terraform destroy
 
