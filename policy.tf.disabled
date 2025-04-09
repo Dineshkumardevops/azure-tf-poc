@@ -1,0 +1,24 @@
+resource "azurerm_policy_definition" "deny_public_ip" {
+  name         = "deny-public-ip"
+  policy_type  = "Custom"
+  mode         = "All"
+  display_name = "Deny Public IP"
+  description  = "This policy denies the creation of public IPs."
+
+  policy_rule = jsonencode({
+    "if" = {
+      "field" = "Microsoft.Network/publicIPAddresses/ipAddress"
+      "notEquals" = null
+    },
+    "then" = {
+      "effect" = "deny"
+    }
+  })
+}
+
+resource "azurerm_policy_assignment" "deny_public_ip_assignment" {
+  name                 = "deny-public-ip-assignment"
+  display_name         = "Deny Public IP Assignment"
+  scope                = "/subscriptions/${var.subscription_id}"
+  policy_definition_id = azurerm_policy_definition.deny_public_ip.id
+}
