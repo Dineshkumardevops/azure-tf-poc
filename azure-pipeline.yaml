@@ -1,0 +1,71 @@
+trigger:
+- main
+
+stages:
+  - stage: TerraformPlan
+    displayName: "Terraform Plan"
+    jobs:
+      - job: Plan
+        displayName: "Run Terraform Plan"
+        pool:
+          vmImage: 'ubuntu-latest'
+
+        variables:
+          workingDirectory: $(System.DefaultWorkingDirectory)
+
+        steps:
+          - task: AzureCLI@2
+            displayName: "Terraform Init & Plan"
+            inputs:
+              azureSubscription: "<YOUR-SERVICE-CONNECTION-NAME>"  # replace this
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: $(workingDirectory)
+              inlineScript: |
+                echo "Initializing Terraform..."
+                terraform init
+
+                echo "Running Terraform Validate..."
+                terraform validate
+
+                echo "Running Terraform Plan..."
+                terraform plan -var-file="terraform.tfvars" -out=tfplan
+
+          - publish: $(System.DefaultWorkingDirectory)/tfplan
+            artifact: terraformPlan
+
+  - stage: TerraformApply
+    displayName: "Terraform Apply"
+    dependsOn: TerraformPlan
+    condition: succeeded()
+
+    approval:
+      # Manual approval by *anyone* in the team before apply
+      approvals:
+        - approvalType: Manual
+          instructions: "Please review the Terraform plan before applying."
+          requester: "*"
+
+    jobs:
+      - job: Apply
+        displayName: "Apply Terraform Changes"
+        pool:
+          vmImage: 'ubuntu-latest'
+
+        variables:
+          workingDirectory: $(System.DefaultWorkingDirectory)
+
+        steps:
+          - download: current
+            artifact: terraformPlan
+
+          - task: AzureCLI@2
+            displayName: "Terraform Apply"
+            inputs:
+              azureSubscription: "<YOUR-SERVICE-CONNECTION-NAME>"  # replace this
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: $(workingDirectory)
+              inlineScript: |
+                echo "Applying Terraform Plan..."
+                terraform apply "tfplan"
